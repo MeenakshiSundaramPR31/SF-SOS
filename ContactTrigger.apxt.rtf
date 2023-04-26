@@ -1,0 +1,28 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2709
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 trigger ContactTrigger on Contact (after insert, after update, after delete, after undelete) \{\
+	List<Account> accountList = new List<Account>();\
+    Map<Id, Integer> contactsCountMap = new Map<Id, Integer>();\
+    \
+    for(Contact con : Trigger.New)\{\
+		contactsCountMap.put(con.AccountId, 0);\
+    \}\
+    \
+    for(AggregateResult result : [Select AccountId, COUNT(Id) numContact FROM Contact Where AccountId IN: contactsCountMap.keySet() GROUP BY AccountId])\{\
+        Id accId = (Id)result.get('AccountId');\
+        Integer contactCount= (Integer)result.get('numContact');\
+        \
+        contactsCountMap.put(accId, contactCount);\
+    \}\
+    \
+    for(Id accId : contactsCountMap.keySet())\{\
+        accountList.add(new Account(Id = accId, Number_of_Contacts__c = contactsCountMap.get(accId)));\
+    \}\
+    \
+    update accountList;\
+\}}
